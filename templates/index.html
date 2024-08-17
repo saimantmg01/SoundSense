@@ -1,35 +1,49 @@
-{% extends "base.html" %}
-
-{% block title %}Home Page{% endblock %}
-
-{% block content %}
-
+{% extends "base.html" %} {% block title %}Home Page{% endblock %} {% block
+content %}
 
 <div class="container">
-    <h1>Welcome to the Sound Sense</h1>
-    <p>This is the content of the home page.</p>
+  <h1>Welcome to the Sound Sense</h1>
+  <p>This is the content of the home page.</p>
 
-    <div class="buttons">
-        
-        <button id="startBtn">Start Speaking</button>
-        <button id="stopBtn" disabled>Stop</button>
+  <div class="buttons">
+    <button id="startBtn" type="submit" onclick="handleButtonClick()">
+      Start Speaking
+    </button>
+    <button id="stopBtn" disabled>Stop</button>
 
-        <button id="startButton">Start Voice Input</button>
-        <div id="output"></div>
+    <button id="startButton">Start Voice Input</button>
+    <div id="output"></div>
 
+    <!-- doesnot support anymore. chrome, firefox, webkit supported browser -->
+    <!-- <input type="text" x-webkit-speech /> -->
+  </div>
 
-        <!-- doesnot support anymore. chrome, firefox, webkit supported browser -->
-        <!-- <input type="text" x-webkit-speech /> -->
-
-    </div>
-
-    <div class="outputs">
-        <textarea id="transcript" rows="10" cols="50"></textarea>
-        <textarea id="output" rows="10" cols="50"></textarea>
-    </div>
+  <div class="outputs">
+    <textarea id="response" rows="10" cols="50"></textarea>
+    <textarea id="output" rows="10" cols="50"></textarea>
+  </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
+<script>
+  function handleButtonClick() {
+    fetch("/voice-start", {
+      // Ensure fetch is used correctly
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json()) // Parse JSON response
+      .then((data) => {
+        if (data.success) {
+          document.getElementById("response").value = data.transcript;
+          console.log(data.transcript);
+        } else {
+          document.getElementById("response").value = "Something went wrong";
+        }
+      })
+      .catch((error) => console.error("Error:", error)); // Catch any errors
+  }
+</script>
 
 {% endblock %}
