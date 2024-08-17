@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+    <h1>Welcome to the Sound Sense</h1>
+    <p>This is the content of the home page.</p>
+
+    <div class="buttons">
+        
+        <button id="startBtn">Start Speaking</button>
+        <button id="stopBtn" disabled>Stop</button>
+
+        <button id="startButton">Start Voice Input</button>
+        <div id="output"></div>
+
+
+        <!-- doesnot support anymore. chrome, firefox, webkit supported browser -->
+        <!-- <input type="text" x-webkit-speech /> -->
+
+    </div>
+
+    <div class="outputs">
+        <textarea id="transcript" rows="10" cols="50"></textarea>
+        <textarea id="output" rows="10" cols="50"></textarea>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+
+{% endblock %}
