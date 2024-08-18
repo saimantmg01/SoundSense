@@ -1,5 +1,6 @@
-{% extends "base.html" %} {% block title %}Home Page{% endblock %} {% block
-content %}
+<!-- {% extends "base.html" %}
+{% block title %}Home Page{% endblock %}
+{% block content %}
 
 <div class="container">
   <h1>Welcome to the Sound Sense</h1>
@@ -11,39 +12,222 @@ content %}
     </button>
     <button id="stopBtn" disabled>Stop</button>
 
-    <button id="startButton">Start Voice Input</button>
-    <div id="output"></div>
-
-    <!-- doesnot support anymore. chrome, firefox, webkit supported browser -->
-    <!-- <input type="text" x-webkit-speech /> -->
+    <button id="startButton" onclick="statprompt()">Speak to chatbot</button>
   </div>
 
   <div class="outputs">
-    <textarea id="response" rows="10" cols="50"></textarea>
-    <textarea id="output" rows="10" cols="50"></textarea>
+    <textarea id="response" rows="10" cols="50" readonly></textarea>
+    <textarea id="output" rows="10" cols="50" readonly></textarea>
   </div>
 </div>
 
 <script>
   function handleButtonClick() {
+    const responseText = document.getElementById('response').value.trim();
+
+    // Check if responseText is empty and set a default value if needed
+    if (!responseText) {
+      document.getElementById('response').value = 'Please provide input'; // Optionally update the UI
+      return;
+    }
+
     fetch("/voice-start", {
-      // Ensure fetch is used correctly
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ content: responseText }) // Send the textarea content
     })
-      .then((response) => response.json()) // Parse JSON response
+      .then((response) => response.json())
       .then((data) => {
         if (data.success) {
           document.getElementById("response").value = data.transcript;
+          document.getElementById("output").value = data.text;
           console.log(data.transcript);
+          fetchResponse(); // Fetch the AI response after getting the transcript
         } else {
           document.getElementById("response").value = "Something went wrong";
         }
       })
-      .catch((error) => console.error("Error:", error)); // Catch any errors
+      .catch((error) => console.error("Error:", error));
+  }
+
+  async function fetchResponse() {
+    try {
+      const response = await fetch('http://localhost:5000/get-response');
+      const data = await response.json();
+      const outputBox = document.getElementById('output');
+
+      if (response.ok) {
+        outputBox.value = data.text; // Display the AI response
+      } else {
+        outputBox.value = `Error: ${data.error}`; // Display the error message
+      }
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      const outputBox = document.getElementById('output');
+      outputBox.value = 'Failed to fetch response from server.';
+    }
   }
 </script>
 
-{% endblock %}
+
+
+{% endblock %} -->
+<!-- 
+
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Welcome to the Sound Sense</h1>
+  <p>This is the content of the home page.</p>
+
+  <div class="buttons">
+    <button id="startBtn" type="submit" onclick="handleButtonClick()">
+      Start Speaking
+    </button>
+    <button id="stopBtn" disabled>Stop</button>
+
+    <button id="startButton" onclick="startPrompt()">Speak to chatbot</button>
+  </div>
+
+  <div class="outputs">
+    <textarea id="speechOutput" rows="10" cols="50" readonly></textarea>
+    <textarea id="promptResponse" rows="10" cols="50" readonly></textarea>
+  </div>
+</div>
+
+<script>
+  function handleButtonClick() {
+    // Start speech recognition
+    fetch("/voice-start", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: "" }) // Send an empty string to start speech recognition
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          document.getElementById("speechOutput").value = data.transcript;
+          console.log(data.transcript);
+        } else {
+          document.getElementById("speechOutput").value = "Something went wrong";
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+
+  function startPrompt() {
+    // Get the speech output
+    const speechOutput = document.getElementById("speechOutput").value.trim();
+
+    // Check if speech output is empty
+    if (!speechOutput) {
+      document.getElementById("speechOutput").value = "Please provide input";
+      return;
+    }
+
+    // Send the speech output to the server to get the prompt response
+    fetch("/get-prompt-response", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ speech: speechOutput })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          document.getElementById("promptResponse").value = data.response;
+        } else {
+          document.getElementById("promptResponse").value = "Something went wrong";
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+</script>
+
+{% endblock %} -->
+
+
+{% extends "base.html" %} {% block title %}Home Page{% endblock %} {% block
+  content %}
+  
+  <div class="container">
+    <h1>Welcome to the Sound Sense</h1>
+    <p>This is the content of the home page.</p>
+    <p id="Status"></p>
+    <div class="buttons">
+      <button id="startBtn" type="submit" onclick="handleButtonClick()">
+        Start Speaking
+      </button>
+      <button id="stopBtn" onclick="stopLoop()">Stop</button>
+  
+      <button id="startButton">Start Voice Input</button>
+      <div id="output"></div>
+  
+      <!-- doesnot support anymore. chrome, firefox, webkit supported browser -->
+      <!-- <input type="text" x-webkit-speech /> -->
+    </div>
+  
+    <div class="outputs">
+      <textarea id="response" rows="10" cols="50"></textarea>
+      <textarea id="output" rows="10" cols="50"></textarea>
+    </div>
+  </div>
+  
+  <script>
+    function handleButtonClick() {
+      fetch("/voice-start", {
+        // Ensure fetch is used correctly
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json()) // Parse JSON response
+        .then((data) => {
+          if (data.success) {
+            document.getElementById("Status").innerText = "Recording in Progress";
+            document.getElementById("response").value = "";
+            startStream();
+            console.log(data.transcript);
+          } else {
+            document.getElementById("Status").innerText = "Something went wrong";
+          }
+        })
+        .catch((error) => console.error("Error:", error)); // Catch any errors
+    }
+  
+    function stopLoop() {
+      fetch("/voice-end", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("response").value = data.transcript;
+          document.getElementById("Status").value = "Recording Completed";
+          console.log(data.transcript);
+          console.log(data.transcript);
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+    function startStream() {
+      const eventSource = new EventSource("/stream");
+      eventSource.onmessage = function (event) {
+        console.log(event);
+        const textarea = document.getElementById("response");
+        console.log(event.data);
+        textarea.value += event.data + "\n";
+        textarea.scrollTop = textarea.scrollHeight; // Scroll to the bottom
+      };
+    }
+  </script>
+  
+  {% endblock %}
