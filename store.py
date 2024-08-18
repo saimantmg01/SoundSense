@@ -23,7 +23,7 @@ def rec_loop():
             if not voice_recording:
                 break
             time.sleep(0.1)
-        val = readTxt(voice_recording)
+        val = readTxt()
         if(type(val) == str):
             rec_txt += val + '\n'
             streamer.append(val)
@@ -69,7 +69,7 @@ def voice_end():
 def stream():
     def event_stream():
         while voice_recording or len(streamer) > 0 :
-            if len(streamer) > 0:
+            if len(rec_txt) > 0:
                 yield f"data: {streamer.pop(0)}\n\n"
             time.sleep(0.1)
     return Response(event_stream(), mimetype="text/event-stream")
