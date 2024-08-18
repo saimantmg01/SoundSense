@@ -12,7 +12,7 @@ import time
 import requests
 from flask import Response
 
-genai.configure(api_key="AIzaSyB1zC2krSaEI-N8gLCnF0TuOUsIwFCxzWE")
+genai.configure(api_key="")
 
 # Create the model
 generation_config = {
