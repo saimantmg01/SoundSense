@@ -1,22 +1,90 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sound Sense</title>
+
 
     <!-- Connecting to css -->
      <!-- first arg: static specify folder -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
 
-   
 </head>
 <body>
-    <!-- <p> Hello, world</p> -->
-    <!-- Your content goes here -->
-    
-    <!-- for if else and for loops -->
-    {% block content %}
-    {% endblock %}
+    <main>
+        <div class="container">
+            <h1>Welcome to the Sound Sense</h1>
+            <p>This is the content of the home page.</p>
+            <p id="Status"></p>
+            <div class="buttons">
+                <button id="startBtn" type="submit" onclick="handleButtonClick()">Start Speaking</button>
+                <button id="stopBtn" onclick="stopLoop()">Stop</button>
+                <button id="startGeminiButton" onclick="getGeminiResponse()">Start Voice Input</button>
+            </div>
+
+            <div class="outputs">
+                <textarea id="response" rows="10" cols="50"></textarea>
+                <textarea id="outputBox" rows="10" cols="50"></textarea>
+            </div>
+        </div>
+
+        <script>
+            function handleButtonClick() {
+                fetch("/voice-start", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("Status").innerText = "Recording in Progress";
+                        document.getElementById("response").value = "";
+                    } else {
+                        document.getElementById("Status").innerText = "Something went wrong: " + data.transcript;
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            }
+
+            function stopLoop() {
+                fetch("/voice-end", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("response").value = data.transcript;
+                    document.getElementById("response").value = data.user_input;  // Show the user's input here
+                    document.getElementById("outputBox").value = data.transcript; // Show Gemini's response
+                    document.getElementById("Status").innerText = "Recording Completed";
+                })
+                .catch(error => console.error("Error:", error));
+            }
+
+            function getGeminiResponse() {
+                const temp = document.getElementById("response").value;
+                fetch("/get-gemini-response", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ temp: temp }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("outputBox").value = data.transcript;
+                })
+                .catch(error => console.error("Error:", error));
+            }
+        </script>
+    </main>
 </body>
 </html>
